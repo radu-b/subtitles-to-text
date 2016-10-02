@@ -1,0 +1,19 @@
+{
+  "name": "srt-to-txt",
+  "version": "1.0.0",
+  "description": "Bulk convert SRT files to TXT.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/radu-b/srt-to-txt.git"
+  },
+  "author": "Radu Balaban",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/radu-b/srt-to-txt/issues"
+  },
+  "homepage": "https://github.com/radu-b/srt-to-txt#readme"
+}
