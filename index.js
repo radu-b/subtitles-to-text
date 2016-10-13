@@ -1,21 +1,141 @@
 'use strict';
 
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
+function convert(files, options) {
 
-const args = process.argv.slice(2);
-if (args.length != 1) {
-    console.log('Usage: npm start <folder containing SRT files>');
-    return;
+    let filesLoaded = Array.from(files).map(file => {
+        let child = { name: file.name };
+        let lowerName = file.name.toLowerCase();
+
+        if (lowerName.endsWith('.srt')) {
+
+            return new Promise((resolve, reject) => {
+                let reader = new FileReader();
+                reader.onload = e => {
+                    child.text = e.target.result;
+                    resolve(child);
+                };
+
+                reader.readAsText(file);
+            });
+        } else if (lowerName.endsWith('.zip')) {
+
+            // Only supports one level deep ZIP files
+            return new JSZip().loadAsync(file)
+                .then(zip => {
+                    return Promise
+                        .all(Object.keys(zip.files)
+                            .filter(entry => entry.toLowerCase().endsWith('.srt'))
+                            .map(entry => {
+                                let grandChild = { name: entry };
+                                return zip.files[entry].async('string').then(text => {
+                                    grandChild.text = text;
+                                    return grandChild;
+                                });
+                            })
+                        )
+                        .then(grandChildren => {
+                            child.children = grandChildren;
+                            return child;
+                        });
+                });
+        }
+    });
+
+    return Promise
+        .all(filesLoaded)
+        .then(children => {
+            let tree = { children };
+            sortTree(tree);
+
+            let outputParts = [];
+            convertTree(tree, 0, outputParts, options);
+            let output = outputParts.join('\n');
+
+            if (options.html) {
+                let style = `p { text-indent:0em; margin-top:0.6em; }; h3 { margin-top: 0.6em;}`;
+                output = `
+                <html>
+                    <head>
+                        <style>
+                        ${style}
+                        </style>
+                    </head>
+                <body>
+                ${output}
+                </body>
+                </html>`.replace(/^                /g);
+            }
+
+            return output;
+        });
 }
 
-const folder = args[0];
-const sep = os.EOL + os.EOL;
+function sortTree(tree) {
+    if (tree.children) {
+        tree.children.sort((a, b) => a.name.compareTo(b.name));
 
-function convert(text) {
-    let result = '';
+        for (let child in tree.children) {
+            sortTree(child);
+        }
+    }
+}
+
+function convertTree(tree, depth, outputParts, options) {
+    if (tree.name) {
+        outputParts.push(getHeading(tree.name, depth, options));
+    }
+
+    if (tree.text) {
+        let paragraphs = convertToParagraphs(tree.text);
+        let converted;
+        if (options.html) {
+            converted = paragraphs
+                .map(p => '<p>' + escapeHtml(p) + '</p>')
+                .join('\n');
+        } else {
+            converted = paragraphs.join('\n\n')
+        }
+        outputParts.push(converted);
+    }
+
+    if (tree.children && tree.children.length) {
+        for (let child of tree.children) {
+            convertTree(child, depth + 1, outputParts, options)
+        }
+    }
+}
+
+function getHeading(text, depth, options) {
+    let heading;
+
+    let cleanText = text
+        .replace(/\.(srt|zip)$/i, '')
+        .replace(/subtitles?$/i, '');
+
+    if (options.html) {
+        let h = 'h' + (depth + 1);
+        heading = '<' + h + '>' + escapeHtml(cleanText) + '</' + h + '>';
+        if (options.kindle && depth == 0) {
+            heading = '<mbp:pagebreak />' + heading;
+        }
+    } else {
+        if (depth < 3) {
+            heading = cleanText + '\n' + (depth == 1 ? '=' : '-').repeat(cleanText.length);
+        } else {
+            heading = '#'.repeat(depth + 1) + ' ' + cleanText;
+        }
+
+        heading += '\n';
+    }
+
+    return heading;
+}
+
+function convertToParagraphs(text) {
+
     let lines = text.split(/\r?\n/);
+    let paragraphs = [];
+    let paragraph = '';
 
     // Remove timestamps
     // Join lines into paragraphs, except where line ends with a dot
@@ -28,27 +148,44 @@ function convert(text) {
             continue;
         }
 
-        result += line;
+        paragraph += line;
         if (line.match(/[.!?]$/)) {
-            result += sep;
+            paragraphs.push(paragraph);
+            paragraph = '';
         } else {
-            result += ' ';
+            paragraph += ' ';
         }
     }
 
-    return result;
+    paragraphs.push(paragraph);
+    return paragraphs;
 }
 
-// List all srt files in the input folder
-// Read all their contents
-let content = fs.readdirSync(folder)
-    .map(file => path.join(folder, file))
-    .filter(file => path.extname(file).toLowerCase() == ".srt" && fs.lstatSync(file).isFile())
-    .map(file => path.basename(file, ".srt") + sep + convert(fs.readFileSync(file).toString()))
-    .join(sep);
 
-// Get folder name - use it as the output txt name
-// Save output 
-fs.writeFileSync(folder + '.txt', content);
+function escapeHtml(unsafe) {
+    return unsafe
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;');
+}
 
-console.log('Done.');
+document.getElementById('buttonConvert').addEventListener('click', () => {
+    let input = document.getElementById('inputFile');
+    if (input.files.length == 0) {
+        return;
+    }
+
+    let radios = document.getElementsByName('format');
+    let format = Array.from(radios).filter(r => r.checked)[0].value;
+    let options = { html: format > 0, kindle: format == 2 };
+
+    convert(input.files, options)
+        .then(output => {
+
+            let linkDownload = document.getElementById('linkDownload');
+            linkDownload.href = 'data:application/x-download;charset=utf-8,' + encodeURIComponent(output);
+            linkDownload.download = options.html ? 'converted.html' : 'converted.txt';
+        });
+});

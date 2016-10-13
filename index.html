@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<title>Convert Subtitles To Text</title>
+</head>
+
+<body>
+	<div>
+		<h1>Convert Subtitles To Text</h1>
+		<p>You can convert a single .srt file, multiple .srt files, or one or more .zip archives containing subtitle files.</p>
+		<p>The files will be included in alphabetical order, and grouped into chapters (and sub-chapters).</p>
+		<label>
+            Pick your input files:
+            <input id="inputFile" type="file" multiple>
+        </label>
+
+		<label>Select the output format:</label>
+		<ul>
+			<li><label><input type="radio" name="format" value="0" checked>Text / Markdown</label></li>
+			<li><label><input type="radio" name="format" value="1">HTML</label></li>
+			<li><label><input type="radio" name="format" value="2">HTML (Kindle friendly format)</label></li>
+		</ul>
+
+		<button id="buttonConvert">Convert</button>
+		<a id="linkDownload" href="">Download</a>
+		<p>If you own a Kindle, you can select the Kindle friendly format, and send the result as an attachment to your Kindle e-mail
+			address - it will be automatically converted into an e-book you can read on your device.</p>
+	</div>
+
+	<script src="node_modules/jszip/dist/jszip.js"></script>
+	<script src="index.js"></script>
+</body>
+
+</html>

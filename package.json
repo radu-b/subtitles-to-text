@@ -1,19 +1,22 @@
 {
-  "name": "srt-to-txt",
+  "name": "srt-to-text",
   "version": "1.0.0",
-  "description": "Bulk convert SRT files to TXT.",
+  "description": "Convert subtitles (.srt) to text/HTML.",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/radu-b/srt-to-txt.git"
+    "url": "git+https://github.com/radu-b/subtitles-to-text.git"
   },
   "author": "Radu Balaban",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/radu-b/srt-to-txt/issues"
+    "url": "https://github.com/radu-b/subtitles-to-text/issues"
   },
-  "homepage": "https://github.com/radu-b/srt-to-txt#readme"
+  "homepage": "https://github.com/radu-b/subtitles-to-text#readme",
+  "dependencies": {
+    "jszip": "^3.1.3"
+  }
 }
