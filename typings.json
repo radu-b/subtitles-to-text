@@ -1,6 +1,5 @@
 {
   "globalDependencies": {
-    "jszip": "registry:dt/jszip#0.0.0+20160709055933",
-    "node": "registry:dt/node#6.0.0+20160928143418"
+    "jszip": "registry:dt/jszip#0.0.0+20160709055933"
   }
 }

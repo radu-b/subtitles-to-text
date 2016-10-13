@@ -17,24 +17,28 @@ function convert(files, options) {
 
                 reader.readAsText(file);
             });
+
         } else if (lowerName.endsWith('.zip')) {
 
             // Only supports one level deep ZIP files
-            return new JSZip().loadAsync(file)
+            return new JSZip()
+                .loadAsync(file)
                 .then(zip => {
                     return Promise
                         .all(Object.keys(zip.files)
                             .filter(entry => entry.toLowerCase().endsWith('.srt'))
                             .map(entry => {
-                                let grandChild = { name: entry };
-                                return zip.files[entry].async('string').then(text => {
-                                    grandChild.text = text;
-                                    return grandChild;
-                                });
+                                let grandchild = { name: entry };
+                                return zip.files[entry]
+                                    .async('string')
+                                    .then(text => {
+                                        grandchild.text = text;
+                                        return grandchild;
+                                    });
                             })
                         )
-                        .then(grandChildren => {
-                            child.children = grandChildren;
+                        .then(grandchildren => {
+                            child.children = grandchildren;
                             return child;
                         });
                 });
@@ -52,7 +56,7 @@ function convert(files, options) {
             let output = outputParts.join('\n');
 
             if (options.html) {
-                let style = `p { text-indent:0em; margin-top:0.6em; }; h3 { margin-top: 0.6em;}`;
+                let style = `p { text-indent: 0em; margin-top: 0.6em; }; h3 { margin-top: 0.6em;}`;
                 output = `
                 <html>
                     <head>
@@ -63,7 +67,7 @@ function convert(files, options) {
                 <body>
                 ${output}
                 </body>
-                </html>`.replace(/^                /g);
+                </html>`.replace(/^                /g, '');
             }
 
             return output;
@@ -115,6 +119,7 @@ function getHeading(text, depth, options) {
     if (options.html) {
         let h = 'h' + (depth + 1);
         heading = '<' + h + '>' + escapeHtml(cleanText) + '</' + h + '>';
+
         if (options.kindle && depth == 0) {
             heading = '<mbp:pagebreak />' + heading;
         }
@@ -138,7 +143,7 @@ function convertToParagraphs(text) {
     let paragraph = '';
 
     // Remove timestamps
-    // Join lines into paragraphs, except where line ends with a dot
+    // Join lines into paragraphs, except where line ends with an end of sentence mark (.!?)
     for (let i = 0; i < lines.length; i++) {
         let line = lines[i];
 
@@ -183,7 +188,6 @@ document.getElementById('buttonConvert').addEventListener('click', () => {
 
     convert(input.files, options)
         .then(output => {
-
             let linkDownload = document.getElementById('linkDownload');
             linkDownload.href = 'data:application/x-download;charset=utf-8,' + encodeURIComponent(output);
             linkDownload.download = options.html ? 'converted.html' : 'converted.txt';

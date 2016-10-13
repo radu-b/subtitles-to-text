@@ -1,10 +1,9 @@
 {
-  "name": "srt-to-text",
+  "name": "subtitles-to-text",
   "version": "1.0.0",
-  "description": "Convert subtitles (.srt) to text/HTML.",
+  "description": "Convert subtitles (SRT) to text/HTML.",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
   },
   "repository": {
     "type": "git",
