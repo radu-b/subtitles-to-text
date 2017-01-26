@@ -166,7 +166,6 @@ function convertToParagraphs(text) {
     return paragraphs;
 }
 
-
 function escapeHtml(unsafe) {
     return unsafe
         .replace(/&/g, '&amp;')
@@ -176,7 +175,26 @@ function escapeHtml(unsafe) {
         .replace(/'/g, '&apos;');
 }
 
-document.getElementById('buttonConvert').addEventListener('click', () => {
+let buttonConvert = document.getElementById('buttonConvert');
+
+function resetConvert() {
+    buttonConvert.href = 'about:blank';
+    buttonConvert.download = null;
+    buttonConvert.innerText = 'Convert';
+}
+
+document.getElementById('inputFile').addEventListener("change", () => resetConvert());
+document.getElementsByName('format').forEach(r => r.addEventListener("change", () => resetConvert()));
+
+buttonConvert.addEventListener('click', (e) => {
+    if (buttonConvert.href != 'about:blank') {
+        // We have data, just download it as normal
+        return;
+    }
+
+    // Stop any download
+    e.preventDefault();
+
     let input = document.getElementById('inputFile');
     if (input.files.length == 0) {
         return;
@@ -188,8 +206,8 @@ document.getElementById('buttonConvert').addEventListener('click', () => {
 
     convert(input.files, options)
         .then(output => {
-            let linkDownload = document.getElementById('linkDownload');
-            linkDownload.href = 'data:application/x-download;charset=utf-8,' + encodeURIComponent(output);
-            linkDownload.download = options.html ? 'converted.html' : 'converted.txt';
+            buttonConvert.href = 'data:application/x-download;charset=utf-8,' + encodeURIComponent(output);
+            buttonConvert.download = options.html ? 'converted.html' : 'converted.txt';
+            buttonConvert.innerText = 'Download';
         });
 });

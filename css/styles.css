@@ -1,0 +1,63 @@
+
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Lora Regular'), local('Lora-Regular'), url(https://fonts.gstatic.com/l/font?kit=7TPiuEhFLonGIW_yMBUsS41BoCARCH_dgmcj3coQsA0&skey=1d294b6d956fb8e&v=v10) format('woff2');
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+body {
+    background-color: #eee;
+    color: #333;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+    font-size: 14px;
+}
+
+main {
+    background-color: #fff; 
+    box-shadow: #ddd 0 0 100px;
+    height: 100%;
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 100px;
+}
+
+h1 {    
+    font-family: 'Lora', serif;
+    font-size: 40px;
+    margin-top: 0;
+}
+
+ul {
+    list-style: none;
+}
+
+.button {
+    background: #ff5252;
+    border-radius: 3px;
+    color: #fff;
+    display: inline-block;
+    font-size: 16px;
+    padding: 5px 15px;
+    text-decoration: none;
+    text-transform: uppercase;
+}
+
+.button.done {
+    background: #4ce58a;
+}
+
+.button input {
+    position: absolute;
+    visibility: hidden;
+}
+
+.spacer {
+    height: 20px;
+}

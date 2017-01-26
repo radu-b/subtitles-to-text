@@ -4,30 +4,46 @@
 <head>
 	<meta charset="UTF-8">
 	<title>Convert Subtitles To Text</title>
+	<link rel="stylesheet" href="css/styles.css">
 </head>
 
 <body>
-	<div>
-		<h1>Convert Subtitles To Text</h1>
-		<p>You can convert one or multiple SRT file, or one or more ZIP archives containing subtitle files.</p>
-		<p>The files will be included in alphabetical order, and grouped into chapters (and sub-chapters).</p>
-		<label>
-            Pick your input files:
+	<main>
+		<h1>Subtitles to text</h1>
+		<p>
+			This is a tool that can convert subtitles (video captions) to readable text. It can convert, one or more subtitle files,
+			or even an archive containing subtitles in a folder structure.
+		</p>
+
+		<p>When converting multiple files, their content will be put into chapters, based on the file structure, in alphabetical order.</p>
+
+		<p>The tool supports either SRT files, or ZIP files containing SRT files.</p>
+
+		<div class="spacer"></div>
+
+		<label class="button">
+            Select input files
             <input id="inputFile" type="file" multiple>
         </label>
+
+		<div class="spacer"></div>
 
 		<label>Select the output format:</label>
 		<ul>
 			<li><label><input type="radio" name="format" value="0" checked>Text / Markdown</label></li>
 			<li><label><input type="radio" name="format" value="1">HTML</label></li>
-			<li><label><input type="radio" name="format" value="2">HTML (Kindle friendly format)</label></li>
+			<li><label><input type="radio" name="format" value="2">HTML - Kindle friendly format (see below)</label></li>
 		</ul>
 
-		<button id="buttonConvert">Convert</button>
-		<a id="linkDownload" href="">Download</a>
+		<div class="spacer"></div>
+
+		<a id="buttonConvert" class="button" href="about:blank">Convert</a>
+
+		<div class="spacer"></div>
+
 		<p>If you own a Kindle, you can select the Kindle friendly format, and send the result as an attachment to your Kindle e-mail
 			address - it will be automatically converted into an e-book you can read on your device.</p>
-	</div>
+	</main>
 
 	<script src="js/jszip.min.js"></script>
 	<script src="index.js"></script>
