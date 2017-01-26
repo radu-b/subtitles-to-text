@@ -1,9 +1,9 @@
 'use strict';
 
 function convert(files, options) {
+    let tree = {};
 
     let filesLoaded = Array.from(files).map(file => {
-        let child = { name: file.name };
         let lowerName = file.name.toLowerCase();
 
         if (lowerName.endsWith('.srt')) {
@@ -11,16 +11,14 @@ function convert(files, options) {
             return new Promise((resolve, reject) => {
                 let reader = new FileReader();
                 reader.onload = e => {
-                    child.text = e.target.result;
-                    resolve(child);
+                    appendToTree(tree, [], file.name, e.target.result);
+                    resolve();
                 };
 
                 reader.readAsText(file);
             });
 
         } else if (lowerName.endsWith('.zip')) {
-
-            // Only supports one level deep ZIP files
             return new JSZip()
                 .loadAsync(file)
                 .then(zip => {
@@ -28,27 +26,25 @@ function convert(files, options) {
                         .all(Object.keys(zip.files)
                             .filter(entry => entry.toLowerCase().endsWith('.srt'))
                             .map(entry => {
-                                let grandchild = { name: entry };
+                                let entryPathItems = entry.split('/');
+                                let entryName = entryPathItems[entryPathItems.length - 1];
+                                let entryParentNames = entryPathItems.slice(0, entryPathItems.length - 1);
+
                                 return zip.files[entry]
                                     .async('string')
                                     .then(text => {
-                                        grandchild.text = text;
-                                        return grandchild;
+                                        appendToTree(tree, [file.name].concat(entryParentNames), entryName, text);
                                     });
                             })
-                        )
-                        .then(grandchildren => {
-                            child.children = grandchildren;
-                            return child;
-                        });
+                        );
                 });
         }
     });
 
     return Promise
         .all(filesLoaded)
-        .then(children => {
-            let tree = { children };
+        .then(() => {
+
             sortTree(tree);
 
             let outputParts = [];
@@ -72,6 +68,30 @@ function convert(files, options) {
 
             return output;
         });
+}
+
+function appendToTree(tree, parents, name, text) {
+    if (!tree.children) {
+        tree.children = [];
+    }
+
+    if (parents.length == 0) {
+        tree.children.push({ name, text });
+    } else {
+        let firstParent = parents[0];
+        let nextParents = parents.slice(1);
+
+        let matching = tree.children.filter(child => child.name == firstParent);
+        let parent;
+        if (matching.length) {
+            parent = matching[0];
+        } else {
+            parent = { name: firstParent };
+            tree.children.push(parent);
+        }
+
+        appendToTree(parent, nextParents, name, text);
+    }
 }
 
 function sortTree(tree) {
@@ -117,7 +137,7 @@ function getHeading(text, depth, options) {
         .replace(/subtitles?$/i, '');
 
     if (options.html) {
-        let h = 'h' + (depth + 1);
+        let h = 'h' + depth;
         heading = '<' + h + '>' + escapeHtml(cleanText) + '</' + h + '>';
 
         if (options.kindle && depth == 0) {
@@ -127,7 +147,7 @@ function getHeading(text, depth, options) {
         if (depth < 3) {
             heading = cleanText + '\n' + (depth == 1 ? '=' : '-').repeat(cleanText.length);
         } else {
-            heading = '#'.repeat(depth + 1) + ' ' + cleanText;
+            heading = '#'.repeat(depth) + ' ' + cleanText;
         }
 
         heading += '\n';
@@ -181,6 +201,7 @@ function resetConvert() {
     buttonConvert.href = 'about:blank';
     buttonConvert.download = null;
     buttonConvert.innerText = 'Convert';
+    buttonConvert.classList.remove('done');
 }
 
 document.getElementById('inputFile').addEventListener("change", () => resetConvert());
@@ -206,8 +227,10 @@ buttonConvert.addEventListener('click', (e) => {
 
     convert(input.files, options)
         .then(output => {
-            buttonConvert.href = 'data:application/x-download;charset=utf-8,' + encodeURIComponent(output);
+            let blob = new Blob([output], { type: options.html ? 'text/html' : 'text/text' });
+            buttonConvert.href = URL.createObjectURL(blob);
             buttonConvert.download = options.html ? 'converted.html' : 'converted.txt';
             buttonConvert.innerText = 'Download';
+            buttonConvert.classList.add('done');
         });
 });
