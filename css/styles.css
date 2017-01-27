@@ -21,7 +21,7 @@ body {
 
 main {
     background-color: #fff; 
-    box-shadow: #ddd 0 0 100px;
+    box-shadow: #ccc 0 0 100px;
     height: 100%;
     max-width: 700px;
     margin: 0 auto;
@@ -36,6 +36,10 @@ h1 {
 
 ul {
     list-style: none;
+}
+
+a {
+    color: #333;
 }
 
 .button {
@@ -60,4 +64,14 @@ ul {
 
 .spacer {
     height: 20px;
+}
+
+.git {
+    margin-top: 70px;
+    text-align: right;
+}
+
+.git img {
+    vertical-align: bottom;
+    margin-right: 8px;
 }

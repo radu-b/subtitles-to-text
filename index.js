@@ -52,18 +52,19 @@ function convert(files, options) {
             let output = outputParts.join('\n');
 
             if (options.html) {
-                let style = `p { text-indent: 0em; margin-top: 0.6em; }; h3 { margin-top: 0.6em;}`;
+                let kindleStyle = `p { text-indent: 0em; margin-top: 0.6em; }; h1, h2, h3, h4 { margin-top: 0.6em;}`;
+                let style = `body {max-width: 50em; margin: 0 auto;}`;
                 output = `
                 <html>
                     <head>
                         <style>
-                        ${style}
+                        ${options.kindle ? kindleStyle : style}
                         </style>
                     </head>
                 <body>
                 ${output}
                 </body>
-                </html>`.replace(/^                /g, '');
+                </html>`;
             }
 
             return output;
@@ -96,7 +97,7 @@ function appendToTree(tree, parents, name, text) {
 
 function sortTree(tree) {
     if (tree.children) {
-        tree.children.sort((a, b) => a.name.compareTo(b.name));
+        tree.children.sort((a, b) => a.name.localeCompare(b.name));
 
         for (let child in tree.children) {
             sortTree(child);
@@ -195,42 +196,53 @@ function escapeHtml(unsafe) {
         .replace(/'/g, '&apos;');
 }
 
-let buttonConvert = document.getElementById('buttonConvert');
 
-function resetConvert() {
-    buttonConvert.href = 'about:blank';
-    buttonConvert.download = null;
-    buttonConvert.innerText = 'Convert';
-    buttonConvert.classList.remove('done');
+function main() {
+    let currentBlob = null;
+    let buttonConvert = document.getElementById('buttonConvert');
+
+    function resetConvert() {
+        buttonConvert.innerText = 'Convert';
+        buttonConvert.classList.remove('done');
+        currentBlob = null;
+    }
+
+    document.getElementById('inputFile').addEventListener('change', () => resetConvert());
+    Array.from(document.getElementsByName('format'))
+        .forEach(r => r.addEventListener('change', () => resetConvert()));
+
+    buttonConvert.addEventListener('click', (e) => {
+        if (currentBlob) {
+            // We have data, just download it as normal, unless Edge
+            if (window.navigator.msSaveOrOpenBlob) {
+                window.navigator.msSaveOrOpenBlob(currentBlob, buttonConvert.download);
+                e.preventDefault();
+            }
+
+            return;
+        }
+
+        e.preventDefault();
+
+        let input = document.getElementById('inputFile');
+        if (input.files.length == 0) {
+            return;
+        }
+
+        let format = Array.from(document.getElementsByName('format'))
+            .filter(r => r.checked)[0].value;
+
+        let options = { html: format > 0, kindle: format == 2 };
+
+        convert(input.files, options)
+            .then(output => {
+                currentBlob = new Blob([output], { type: options.html ? 'text/html' : 'text/text' });
+                buttonConvert.href = URL.createObjectURL(currentBlob);
+                buttonConvert.download = options.html ? 'converted.html' : 'converted.txt';
+                buttonConvert.innerText = 'Download';
+                buttonConvert.classList.add('done');
+            });
+    });
 }
 
-document.getElementById('inputFile').addEventListener("change", () => resetConvert());
-document.getElementsByName('format').forEach(r => r.addEventListener("change", () => resetConvert()));
-
-buttonConvert.addEventListener('click', (e) => {
-    if (buttonConvert.href != 'about:blank') {
-        // We have data, just download it as normal
-        return;
-    }
-
-    // Stop any download
-    e.preventDefault();
-
-    let input = document.getElementById('inputFile');
-    if (input.files.length == 0) {
-        return;
-    }
-
-    let radios = document.getElementsByName('format');
-    let format = Array.from(radios).filter(r => r.checked)[0].value;
-    let options = { html: format > 0, kindle: format == 2 };
-
-    convert(input.files, options)
-        .then(output => {
-            let blob = new Blob([output], { type: options.html ? 'text/html' : 'text/text' });
-            buttonConvert.href = URL.createObjectURL(blob);
-            buttonConvert.download = options.html ? 'converted.html' : 'converted.txt';
-            buttonConvert.innerText = 'Download';
-            buttonConvert.classList.add('done');
-        });
-});
+main();
