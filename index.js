@@ -135,7 +135,8 @@ function getHeading(text, depth, options) {
 
     let cleanText = text
         .replace(/\.(srt|zip)$/i, '')
-        .replace(/subtitles?$/i, '');
+        .replace(/subtitles?$/i, '')
+        .replace(/(\s-\s)?lang_en_vs1/i, '');
 
     if (options.html) {
         let h = 'h' + depth;
